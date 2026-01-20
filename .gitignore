@@ -1,0 +1,76 @@
+# ----------------------------------------------------------------------
+# PYTHON STANDARD
+# ----------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ----------------------------------------------------------------------
+# VIRTUAL ENVIRONMENTS
+# ----------------------------------------------------------------------
+# Common names for virtual environments
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ----------------------------------------------------------------------
+# TITAN AI SPECIFIC (IMPORTANT)
+# ----------------------------------------------------------------------
+# 1. AI Models: Never commit large .gguf or .bin files (they are too big)
+models/*.gguf
+models/*.bin
+models/*.pth
+
+# 2. User Data: Don't commit your RPG stats, active quests, or memory bank
+data/v1_user.json
+data/v1_quests.json
+data/v1_memory.json
+
+# 3. Documents: Don't commit your local RAG text files
+documents/*.txt
+documents/*.pdf
+documents/*.md
+
+# 4. Configuration: Don't commit local settings (API keys, local paths)
+v1_config.json
+
+# 5. Logs (if any)
+*.log
+
+# ----------------------------------------------------------------------
+# IDE & OS
+# ----------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+
+# Exception: Keep the directory structure
+!models/.gitkeep
+!documents/.gitkeep
+!data/.gitkeep
+
