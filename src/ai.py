@@ -19,21 +19,35 @@ class NeuralCore:
 
     def load_model(self, model_path):
         try:
+            # Check if we need embeddings (High RAM usage)
+            use_embeddings = self.cfg.data.get('rag_enabled', False)
+
             self.llm = Llama(
                 model_path=str(model_path),
                 n_ctx=self.cfg.data['n_ctx'],
                 n_threads=self.cfg.data['n_threads'],
-                embedding=True,
-                verbose=False
+                n_gpu_layers=self.cfg.data['n_gpu_layers'],
+                embedding=use_embeddings,  # Dynamic switch
+                verbose=True # Keep verbose on to see health checks
             )
             self.model_name = model_path.name
-            self._index_docs()
+            
+            # Only index if enabled
+            if use_embeddings:
+                self._index_docs()
+            else:
+                self.rag_chunks = [] # Clear old chunks
+                
             return True
         except Exception as e:
             return str(e)
 
     def _index_docs(self):
         if not self.cfg.data['rag_enabled']: return
+        
+        # Safety check: Llama must be loaded with embedding=True
+        if not self.llm: return
+
         files = list((self.cfg.root / self.cfg.data['docs_dir']).glob("*.txt"))
         self.rag_chunks = []
         
@@ -46,12 +60,16 @@ class NeuralCore:
                 for i in range(0, len(txt), 500):
                     chunk = txt[i:i+500]
                     if len(chunk) < 50: continue
-                    emb = self.llm.create_embedding(chunk)['data'][0]['embedding']
-                    self.rag_chunks.append({"txt": chunk, "vec": emb, "src": fpath.name})
+                    try:
+                        emb = self.llm.create_embedding(chunk)['data'][0]['embedding']
+                        self.rag_chunks.append({"txt": chunk, "vec": emb, "src": fpath.name})
+                    except: pass # Skip chunk if embedding fails
                 p.advance(task)
 
     def search(self, query):
         if not self.rag_chunks or not self.llm: return ""
+        if not self.cfg.data['rag_enabled']: return ""
+        
         try:
             q_vec = self.llm.create_embedding(query)['data'][0]['embedding']
             scores = []
@@ -92,3 +110,4 @@ class NeuralCore:
     def _save_mem(self):
         with open(self.mem_path, 'w') as f:
             json.dump({"history": self.history[-20:], "ltm": self.ltm}, f)
+

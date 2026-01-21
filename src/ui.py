@@ -121,3 +121,4 @@ def draw_skill_tree(rpg):
         
     console.print(tree)
     console.print()
+

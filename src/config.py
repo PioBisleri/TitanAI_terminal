@@ -6,10 +6,11 @@ class Config:
         "models_dir": "models",
         "docs_dir": "documents",
         "data_dir": "data",
-        "n_ctx": 4096,
+        "n_ctx": 2048,           # Lowered for safety (was 4096)
         "n_threads": 4,
+        "n_gpu_layers": 0,       # Default to 0 (CPU only) for stability
         "temperature": 0.7,
-        "rag_enabled": True
+        "rag_enabled": False     # Default to False to save RAM on startup
     }
     
     def __init__(self):
@@ -43,3 +44,4 @@ class Config:
     def save(self):
         with open(self.root / "v1_config.json", 'w') as f: 
             json.dump(self.data, f, indent=4)
+

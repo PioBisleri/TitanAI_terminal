@@ -14,7 +14,7 @@ from src.utils import suppress_c_logs
 
 class TitanTerminal:
     def __init__(self):
-        suppress_c_logs()
+        suppress_c_logs() # Safe stub call
         self.cfg = Config()
         self.rpg = RPGSystem(self.cfg)
         self.quests = QuestSystem(self.cfg, self.rpg)
@@ -82,11 +82,12 @@ class TitanTerminal:
             console.print(f"Temperature: {c['temperature']}")
             console.print(f"Context Win: {c['n_ctx']}")
             console.print(f"Threads:     {c['n_threads']}")
+            console.print(f"GPU Layers:  {c.get('n_gpu_layers', 0)}")
             console.print(f"RAG Enabled: {c['rag_enabled']}")
             console.print("-" * 20)
 
             opt = questionary.select("Modify Parameter:", 
-                choices=["Set Temperature", "Set Context Window", "Set Thread Count", "Toggle RAG", "Back"]
+                choices=["Set Temperature", "Set Context Window", "Set Thread Count", "Set GPU Layers", "Toggle RAG", "Back"]
             ).ask()
 
             if opt == "Back": break
@@ -98,21 +99,33 @@ class TitanTerminal:
                 except: console.print("[red]Invalid Number[/]")
 
             elif opt == "Set Context Window":
-                val = questionary.select("Size:", choices=["2048", "4096", "8192"]).ask()
+                val = questionary.select("Size (Lower is Safer):", choices=["1024", "2048", "4096"]).ask()
                 self.cfg.update('n_ctx', int(val))
-                console.print("[yellow]Restart required to apply context changes.[/]")
-                time.sleep(2)
+                console.print("[yellow]Restart required.[/]")
+                time.sleep(1)
 
             elif opt == "Set Thread Count":
                 try:
                     val = int(questionary.text("Threads (1-8):", default=str(c['n_threads'])).ask())
                     self.cfg.update('n_threads', val)
-                    console.print("[yellow]Restart required to apply thread changes.[/]")
-                    time.sleep(2)
-                except: console.print("[red]Invalid Number[/]")  # <--- FIXED: Added missing except block
+                    console.print("[yellow]Restart required.[/]")
+                    time.sleep(1)
+                except: console.print("[red]Invalid Number[/]")
+
+            elif opt == "Set GPU Layers": 
+                try:
+                    val = int(questionary.text("Layers (0=CPU, 4-10=Stable):", default=str(c.get('n_gpu_layers', 0))).ask())
+                    self.cfg.update('n_gpu_layers', val)
+                    console.print("[yellow]Restart required.[/]")
+                    time.sleep(1)
+                except: console.print("[red]Invalid Number[/]")
 
             elif opt == "Toggle RAG":
-                self.cfg.update('rag_enabled', not c['rag_enabled'])
+                new_val = not c['rag_enabled']
+                self.cfg.update('rag_enabled', new_val)
+                msg = "[green]Enabled (High RAM)[/]" if new_val else "[yellow]Disabled (Low RAM)[/]"
+                console.print(f"RAG is now {msg}. Reload Model to apply.")
+                time.sleep(2)
 
     # --- 🧬 SKILL TREE ---
     def menu_skills(self):
@@ -232,3 +245,4 @@ class TitanTerminal:
                 print()
                 
             except KeyboardInterrupt: break
+
