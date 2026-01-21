@@ -37,6 +37,8 @@ class NeuralCore:
         files = list((self.cfg.root / self.cfg.data['docs_dir']).glob("*.txt"))
         self.rag_chunks = []
         
+        if not files: return
+
         with Progress(SpinnerColumn(), TextColumn("[cyan]Indexing Knowledge..."), transient=True) as p:
             task = p.add_task("", total=len(files))
             for fpath in files:
@@ -45,14 +47,17 @@ class NeuralCore:
                     chunk = txt[i:i+500]
                     if len(chunk) < 50: continue
                     emb = self.llm.create_embedding(chunk)['data'][0]['embedding']
-                    self.rag_chunks.append({"txt": chunk, "vec": emb})
+                    self.rag_chunks.append({"txt": chunk, "vec": emb, "src": fpath.name})
                 p.advance(task)
 
     def search(self, query):
         if not self.rag_chunks or not self.llm: return ""
         try:
             q_vec = self.llm.create_embedding(query)['data'][0]['embedding']
-            scores = [(np.dot(q_vec, c['vec']), c) for c in self.rag_chunks]
+            scores = []
+            for c in self.rag_chunks:
+                score = np.dot(q_vec, c['vec'])
+                scores.append((score, c))
             scores.sort(key=lambda x: x[0], reverse=True)
             return "\n".join([f"- {x[1]['txt']}" for x in scores[:2]])
         except: return ""
@@ -62,14 +67,21 @@ class NeuralCore:
         msgs = [{"role": "system", "content": sys_prompt}] + self.history[-5:]
         
         full_response = ""
-        for chunk in self.llm.create_chat_completion(msgs, stream=True, temperature=0.7):
-            delta = chunk['choices'][0]['delta']
-            if 'content' in delta:
-                yield delta['content']
-                full_response += delta['content']
-        
-        self.history.append({"role": "assistant", "content": full_response})
-        self._save_mem()
+        try:
+            for chunk in self.llm.create_chat_completion(
+                msgs, 
+                stream=True, 
+                temperature=self.cfg.data['temperature']
+            ):
+                delta = chunk['choices'][0]['delta']
+                if 'content' in delta:
+                    yield delta['content']
+                    full_response += delta['content']
+            
+            self.history.append({"role": "assistant", "content": full_response})
+            self._save_mem()
+        except Exception as e:
+            yield f"[Error: {str(e)}]"
 
     def _load_mem(self):
         if self.mem_path.exists():

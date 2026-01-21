@@ -26,41 +26,40 @@ MANIFEST
 # ----------------------------------------------------------------------
 # VIRTUAL ENVIRONMENTS
 # ----------------------------------------------------------------------
-# Common names for virtual environments
 venv/
 env/
 .env/
 .venv/
 ENV/
-env.bak/
-venv.bak/
 
 # ----------------------------------------------------------------------
 # TITAN AI SPECIFIC (IMPORTANT)
 # ----------------------------------------------------------------------
-# 1. AI Models: Never commit large .gguf or .bin files (they are too big)
+# 1. AI Models: Ignore large model files
 models/*.gguf
 models/*.bin
 models/*.pth
 
-# 2. User Data: Don't commit your RPG stats, active quests, or memory bank
+# 2. User Data: PROTECT YOUR PRIVACY
+# Do not commit your stats, memory, or quests
 data/v1_user.json
 data/v1_quests.json
 data/v1_memory.json
 
-# 3. Documents: Don't commit your local RAG text files
+# 3. RAG Documents: Ignore your personal text files
 documents/*.txt
 documents/*.pdf
 documents/*.md
+documents/*.docx
 
-# 4. Configuration: Don't commit local settings (API keys, local paths)
+# 4. Configuration: Ignore local settings
 v1_config.json
 
-# 5. Logs (if any)
+# 5. Logs
 *.log
 
 # ----------------------------------------------------------------------
-# IDE & OS
+# OS & IDE
 # ----------------------------------------------------------------------
 .idea/
 .vscode/
@@ -68,8 +67,10 @@ v1_config.json
 .DS_Store
 Thumbs.db
 
-
-# Exception: Keep the directory structure
+# ----------------------------------------------------------------------
+# DIRECTORY STRUCTURE PRESERVATION
+# ----------------------------------------------------------------------
+# Ensure these folders exist in the repo even if empty
 !models/.gitkeep
 !documents/.gitkeep
 !data/.gitkeep

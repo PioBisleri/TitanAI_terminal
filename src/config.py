@@ -15,18 +15,23 @@ class Config:
     def __init__(self):
         self.root = Path.cwd()
         self.data = self.DEFAULTS.copy()
-        self.load()
         
         # Ensure directories exist
         (self.root / self.data['models_dir']).mkdir(exist_ok=True)
         (self.root / self.data['docs_dir']).mkdir(exist_ok=True)
         (self.root / self.data['data_dir']).mkdir(exist_ok=True)
+        
+        self.load()
 
     def get_path(self, key):
         """Helper to get full paths for data files"""
         if key in ['memory', 'quests', 'user']:
             return self.root / self.data['data_dir'] / f"v1_{key}.json"
         return self.root / self.data[key]
+
+    def update(self, key, value):
+        self.data[key] = value
+        self.save()
 
     def load(self):
         p = self.root / "v1_config.json"
